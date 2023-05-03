@@ -36,10 +36,16 @@ def on_rule_message(client, userdata, message):
     except:
         pass
 
-def create_IOT(id):
+def create_sensor(id):
     new_topic = topic+str(id)
     dict_topics[id] = new_topic
     client.subscribe(new_topic)
+    print(dict_topics)
+
+def create_actuador(id):
+    new_topic = topic+str(id)
+    dict_topics[id] = new_topic+"write"
+    client.subscribe(new_topic+"read")
     print(dict_topics)
     
 def create_regla(magnitud, operador, valor, id_actuador, accion):
@@ -74,8 +80,10 @@ def discord_run():
                 message.content = message.content.lower()
                 tokens = message.content.split(" ")
                 if tokens[0] == "añadir":
-                    if tokens[1] == "sensor" or tokens[1] == "actuador":
-                        create_IOT(int(tokens[2]))
+                    if tokens[1] == "sensor":
+                        create_sensor(int(tokens[2]))
+                    if tokens[1] == "actuador":
+                        create_actuador(int(tokens[2]))
                         
                     elif tokens[1] == "regla":
                         create_regla(tokens[2], tokens[3],

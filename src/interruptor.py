@@ -12,20 +12,19 @@ class interruptor:
         self.client = mqtt.Client()
         self.client.connect(broker_address, broker_port)
         self.new_topic = topic+str(self.id)
-        self.client.subscribe(self.new_topic)
+        self.client.subscribe(self.new_topic+"write")
 
     def on_response(self, user, userdate, message):
         msg = message.payload.decode()
         print (msg)
-        if msg == "ON":
-            print("AAAAAAAAAAAAAAAAA")
+        if msg == "on":
             self.state = "ON"
-        elif msg == "OFF":
+        elif msg == "off":
             self.state = "OFF"
 
     def publish(self):
         while True:
-            self.client.publish(self.new_topic, ""+str(self.id)+":estado:"+self.state)
+            self.client.publish(self.new_topic+"read", ""+str(self.id)+":estado:"+self.state)
             sleep(5)
 
 

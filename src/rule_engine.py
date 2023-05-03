@@ -24,9 +24,9 @@ class rule_engine:
         datos = tupla[0]
         reglas = tupla[1]
         for regla in reglas:
-            regla = regla.split(":")
-            dato = datos[regla[0]]
             try:
+                regla = regla.split(":")
+                dato = datos[regla[0]]
                 if regla[1] == "=":
                     if int(dato) == int(regla[2]):
                         self.client.publish(self.new_topic+"read", regla[3]+":rule:"+regla[4])
