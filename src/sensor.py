@@ -1,5 +1,6 @@
 import random
 import paho.mqtt.client as mqtt
+from time import sleep
 
 
 topic = "redes2/2321/02/"
@@ -15,9 +16,11 @@ class sensor:
         self.client.subscribe(self.new_topic)
         
     def publish(self):
-        self.temperatura = random.randint(10,30)
+        self.temperatura = random.randint(10,25)
         self.client.publish(self.new_topic, ""+str(self.id)+":temperatura:"+str(self.temperatura))
 
 if __name__ == "__main__":
     sens = sensor()
-    sens.publish()
+    while True:
+        sens.publish()
+        sleep(10)

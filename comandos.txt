@@ -5,7 +5,7 @@ Añadir actuador:
 añadir actuador <id>
 
 Añadir regla:
-añadir regla <parametro> <operador> <valor> <id_actuador> <accion>
+añadir regla <magnitud> <operador> <valor> <id_actuador> <accion>
 
 anadir regla temperatura > 26 3 OFF
 
