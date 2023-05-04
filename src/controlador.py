@@ -108,6 +108,23 @@ def rule_engine():
         client.publish(topic+"rulewrite", json.dumps((valores_rule, array_reglas))) 
         sleep(5)
 
+def save_data():
+    save = [dict_topics, array_reglas, valores, valores_rule]
+    with open('data.json', 'w') as f:
+        json.dump(save, f)
+
+def load_data():
+    load = []
+    with open('data.json', 'r') as f:
+        json.dump(load, f)
+
+    dict_topics = load[0]
+    array_reglas = load[1]
+    valores = load[2]
+    valores_rule = load[3]
+
+
+
 hilo1 = threading.Thread(target=discord_run)
 hilo1.start()
 
