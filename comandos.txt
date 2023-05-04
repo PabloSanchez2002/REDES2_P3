@@ -1,3 +1,21 @@
+Añadir sensor:
+añadir sensor <id>
+
+Añadir actuador:
+añadir actuador <id>
+
+Añadir regla:
+añadir regla <parametro> <operador> <valor> <id_actuador> <accion>
+
+anadir regla temperatura > 26 3 OFF
+
+Obtener sensor/actuador:
+obtener <id_sensor/actuador>
+
 FALTA:
     Hacer que las reglas se queden guardadas en json
     Control de excepciones
+
+
+mosquitto_sub -v -t 'test/topic'
+mosquitto_pub -t 'test/topic' -m 'helloWorld'
