@@ -4,7 +4,7 @@ import threading
 import sys
 import json
 from time import sleep
-
+import argparse as ag
 
 broker_address = "localhost"
 broker_port = 1883
@@ -17,7 +17,8 @@ class Controlador:
         self.client = mqtt.Client()
         self.client.connect(broker_address, broker_port)
         self.client.subscribe(topic+"ruleread")
-        self.client.subscribe(topic+"bridge")
+        self.client.subscribe(topic+"bridge_send")
+        self.send_topic = topic + "bridge_receive"
         self.client.on_message = self.on_rule_message
 
         self.dict_topics= {}     #id:topic
@@ -33,27 +34,30 @@ class Controlador:
     def on_rule_message(self, client, userdata, message):
         # "<id>:<parametro>:<datos>"
         tokens = message.payload.decode().split(":")
-        try:
-            if (tokens[0] == "bridge"):
-                if (tokens[1] == "newsensor"):
-                    self.create_sensor(int(tokens[2]))
-                elif (tokens[1] == "newactuador"):
-                    self.create_actuador(int(tokens[2]))
-                elif (tokens[1] == "newrule"):
-                    self.create_regla(
-                        tokens[2], tokens[2], int(tokens[2]), int(tokens[2]), tokens[2])
+        #try:
+        if (tokens[0] == "bridge"):
+            if (tokens[1] == "newsensor"):
+                self.create_sensor(int(tokens[2]))
+            elif (tokens[1] == "newactuador"):
+                self.create_actuador(int(tokens[2]))
+            elif (tokens[1] == "newrule"):
+                self.create_regla(
+                    tokens[2], tokens[2], int(tokens[2]), int(tokens[2]), tokens[2])
+            elif (tokens[1] == "get"):
+                print("bridge solicita dato:" + self.valores[int(tokens[2])])
+                self.client.publish(self.send_topic, self.valores[int(tokens[2])])
 
-            elif (tokens[1] == "rule"):
-                client.publish(self.dict_topics[int(tokens[0])], tokens[2]) 
-            
-            else:
-                self.valores[tokens[0]] = tokens[1]+":"+tokens[2]
-                # Actualiza en el caso de que llegue un dato nuevo
-                self.valores_rule[tokens[1]] = tokens[2]
-                print(self.valores)
-                print(self.valores_rule)
-        except:
-            pass
+        elif (tokens[1] == "rule"):
+            client.publish(self.dict_topics[int(tokens[0])], tokens[2]) 
+        
+        else:
+            self.valores[int(tokens[0])] = tokens[1]+":"+tokens[2]
+            # Actualiza en el caso de que llegue un dato nuevo
+            self.valores_rule[tokens[1]] = tokens[2]
+            print(self.valores)
+            print(self.valores_rule)
+        #except:
+        #    pass
 
     def create_sensor(self, id):
         new_topic = topic+str(id)
@@ -103,6 +107,14 @@ def main():
 
 if __name__ == '__main__':
     try:
+        argumentsparsed = ag.ArgumentParser()
+        argumentsparsed.add_argument("--host", help="hostanem", type=str)
+        argumentsparsed.add_argument("--port", "--p", help="port number", type=int)
+        args = argumentsparsed.parse_args()
+        if (args.port):
+            broker_port = args.port
+        if (args.host):
+            broker_address = args.host
         main()
     except KeyboardInterrupt:
         print('Interrupted')

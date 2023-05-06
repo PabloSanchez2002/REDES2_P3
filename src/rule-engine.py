@@ -1,4 +1,5 @@
 import paho.mqtt.client as mqtt
+import argparse as ag
 import json
 
 broker_address = "localhost"
@@ -13,7 +14,7 @@ class rule_engine:
         self.new_topic = topic
         self.client.connect(broker_address, broker_port)
         self.client.subscribe(self.new_topic+"write")
-        
+
     def publish(self):
         self.client.publish(self.new_topic, "1:rule:OFF")
 
@@ -29,22 +30,32 @@ class rule_engine:
                 dato = datos[regla[0]]
                 if regla[1] == "=":
                     if int(dato) == int(regla[2]):
-                        self.client.publish(self.new_topic+"read", regla[3]+":rule:"+regla[4])
+                        self.client.publish(
+                            self.new_topic+"read", regla[3]+":rule:"+regla[4])
 
                 elif regla[1] == ">":
                     if int(dato) > int(regla[2]):
                         self.client.publish(
                             self.new_topic+"read", regla[3]+":rule:"+regla[4])
-                        
+
                 elif regla[1] == "<":
                     if int(dato) < int(regla[2]):
                         self.client.publish(
                             self.new_topic+"read", regla[3]+":rule:"+regla[4])
             except:
                 pass
-            
+
 
 if __name__ == "__main__":
+    argumentsparsed = ag.ArgumentParser()
+    argumentsparsed.add_argument("--host", help="hostanem", type=str)
+    argumentsparsed.add_argument(
+        "--port", "--p", help="port number", type=int)
+    args = argumentsparsed.parse_args()
+    if (args.port):
+        broker_port = args.port
+    if (args.host):
+        broker_address = args.host
     rule_eng = rule_engine()
     rule_eng.client.on_message =rule_eng.on_response
     rule_eng.client.loop_forever()
