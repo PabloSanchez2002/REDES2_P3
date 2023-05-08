@@ -1,11 +1,18 @@
 import os
 import sys
+import threading
+import asyncio
 import discord
 import paho.mqtt.client as mqtt
 import argparse as ag
+from multiprocessing import Queue
+import time
+import signal
+import os
 
 
 token = "MTEwMDcxODE2MDI3NTA2Njg5MA.GSkF9C.MY1kNb6gpBPOtmoTTqyeovZ82iS8NTbLH6AwCc"
+channel_id = '1100705328078782507'
 broker_address = "localhost"
 broker_port = 1883
 topic = "redes2/2321/02/"
@@ -16,23 +23,44 @@ class Bridge:
 
         self.client = mqtt.Client()
         self.client.connect(broker_address, broker_port)
-        self.client.subscribe(topic+"bridge_receive")
+        self.receive_topic = topic+"bridge_receive"
         self.send_topic = topic+"bridge_send"
+        self.client.subscribe(self.receive_topic)
         self.client.on_message = self.on_rule_message
 
+        self.answer_queue = Queue()
+
+        signal.signal(signal.SIGALRM, self.send_event)
+        signal.signal(signal.SIGUSR1, self.clock_event)
+
+        self.loop = asyncio.get_event_loop()
+
+
+        hilo = threading.Thread(target=self.run, args=(self.answer_queue, os.getpid()))
+        #hilo1 = threading.Thread(target=self.responder)
+        hilo.start()
+        #hilo1.start()
+        self.client.loop_forever()
+
+    def send_event(self, signum, frame):
+        temp = self.answer_queue.get(block=True)
+
+        self.loop.create_task(self.send(temp))
+
+    def run(self):
         intents = discord.Intents.all()
         intents.members = True
 
-        discord_client = discord.Client(intents=intents)
+        self.discord_client = discord.Client(intents=intents)
 
-        @discord_client.event
+        @self.discord_client.event
         async def on_ready():
             print('Bot de Discord conectado como {0.user}'.format(
-                discord_client))
+                self.discord_client))
 
-        @discord_client.event
+        @self.discord_client.event
         async def on_message(message):
-            if message.author == discord_client.user:
+            if message.author == self.discord_client.user:
                 return
 
             else:
@@ -67,15 +95,37 @@ class Bridge:
 
                 # except:
                 #    print("El comando que has introducido no funcionó.")
+
+
         try:
-            discord_client.run(token)
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(self.discord_client.run(token))
+            #self.discord_client.run(token)
         except:
             return
 
-    async def on_rule_message(self, client, userdata, msg):
-        print("he recibido:" + msg)
-        #await message.channel.send(message.format(message))
+    def on_rule_message(self, client, userdata, msg):
+        print("me llega algo!")
+        if msg.topic == self.receive_topic:
+            #guardarlo en la cola y subir el flag
+            pass
+            
 
+    def responder(self):
+        while(True):
+            #espera a una variable /flag
+            #cuando se cumple la condicion, envia el mensaje, que lo lee de una cola de mensajes
+            message = msg.payload.decode('utf-8')
+            print("he recibido:" + str(message))
+            channel = self.discord_client.get_channel(channel_id)
+            # self.discord_client.send_message(channel, message)
+            self.enviar(channel, message)
+            # await channel.send(message)
+            # await message.channel.send(message.format(msg))
+
+    async def enviar(self, channel, message):
+        await channel.send(message)
 
 def main():
     """Punto de entrada de ejecución
