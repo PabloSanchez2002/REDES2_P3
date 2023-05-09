@@ -12,7 +12,7 @@ import os
 
 
 token = "MTEwMDcxODE2MDI3NTA2Njg5MA.GSkF9C.MY1kNb6gpBPOtmoTTqyeovZ82iS8NTbLH6AwCc"
-channel_id = '1100705328078782507'
+channel_id = 1100705328078782507
 broker_address = "localhost"
 broker_port = 1883
 topic = "redes2/2321/02/"
@@ -30,24 +30,17 @@ class Bridge:
 
         self.answer_queue = Queue()
 
-        signal.signal(signal.SIGALRM, self.send_event)
-        signal.signal(signal.SIGUSR1, self.clock_event)
+        self.sem = threading.Semaphore(0)
+        self.loop = asyncio.new_event_loop()
 
-        self.loop = asyncio.get_event_loop()
-
-
-        hilo = threading.Thread(target=self.run, args=(self.answer_queue, os.getpid()))
-        #hilo1 = threading.Thread(target=self.responder)
-        hilo.start()
-        #hilo1.start()
+        hilo = threading.Thread(target=self.run_bot).start()
+        hilo1 = threading.Thread(target=self.responder).start()
+       
+        
         self.client.loop_forever()
+        
 
-    def send_event(self, signum, frame):
-        temp = self.answer_queue.get(block=True)
-
-        self.loop.create_task(self.send(temp))
-
-    def run(self):
+    def run_bot(self):
         intents = discord.Intents.all()
         intents.members = True
 
@@ -57,6 +50,12 @@ class Bridge:
         async def on_ready():
             print('Bot de Discord conectado como {0.user}'.format(
                 self.discord_client))
+            #for chann in self.discord_client.get_all_channels():
+            #    print(str(chann.id) + "  " + chann.name)
+            #    if str(chann.id) == channel_id:
+            #        CHANNEL = chann
+            #        print(chann.type)
+
 
         @self.discord_client.event
         async def on_message(message):
@@ -72,21 +71,17 @@ class Bridge:
                     if tokens[1] == "sensor":
                         self.client.publish(
                             self.send_topic, "bridge:newsensor:" + tokens[2])
-                        # create_sensor(int(tokens[2]))
+                        
                     elif tokens[1] == "actuador":
                         self.client.publish(
                             self.send_topic, "bridge:newactuador:" + tokens[2])
-                        # create_actuador(int(tokens[2]))
 
                     elif tokens[1] == "regla":
                         self.client.publish(
                             self.send_topic, "bridge:newrule:" + str(tokens[2]) + ":" + str(tokens[3]) + ":" + str(tokens[3]) + ":" + str(tokens[3]) + ":" + str(tokens[6]))
-                        # create_regla(tokens[2], tokens[3], tokens[4], tokens[5], tokens[6])
 
                 elif tokens[0] == "obtener":
                     print("entra en obtener:" + self.send_topic)
-                    # mensaje = valores[tokens[1]]
-                    # await message.channel.send(mensaje.format(message))
                     self.client.publish(
                         self.send_topic, "bridge:get:" + str(tokens[1]))
 
@@ -98,33 +93,29 @@ class Bridge:
 
 
         try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(self.discord_client.run(token))
-            #self.discord_client.run(token)
+            self.discord_client.run(token)
         except:
             return
 
     def on_rule_message(self, client, userdata, msg):
-        print("me llega algo!")
+        print("me llega algo! ->" + str(msg.payload.decode()))
         if msg.topic == self.receive_topic:
-            #guardarlo en la cola y subir el flag
-            pass
-            
+            self.answer_queue.put(msg.payload.decode())
+            self.sem.release()
+           
 
     def responder(self):
         while(True):
-            #espera a una variable /flag
-            #cuando se cumple la condicion, envia el mensaje, que lo lee de una cola de mensajes
-            message = msg.payload.decode('utf-8')
-            print("he recibido:" + str(message))
-            channel = self.discord_client.get_channel(channel_id)
-            # self.discord_client.send_message(channel, message)
-            self.enviar(channel, message)
-            # await channel.send(message)
-            # await message.channel.send(message.format(msg))
+            self.sem.acquire()
+            temp = self.answer_queue.get(block=True)
+            print(temp + "<- Este es el puto mensaje")
+            task = self.loop.create_task(self.enviar(temp))
+            self.loop.run_until_complete(task)
+            
 
-    async def enviar(self, channel, message):
+    async def enviar(self, message):
+        print("Vamos a enviar")
+        channel = self.discord_client.get_channel(channel_id)
         await channel.send(message)
 
 def main():
