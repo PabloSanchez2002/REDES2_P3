@@ -83,8 +83,7 @@ class Controlador:
             sleep(5)
 
     def save_data(self):
-        save = [self.dict_topics, self.array_reglas,
-                self.valores, self.valores_rule]
+        save = [self.dict_topics, self.array_reglas]
         with open('data.json', 'w') as f:
             json.dump(save, f)
 
@@ -95,9 +94,7 @@ class Controlador:
 
         self.dict_topics = load[0]
         self.array_reglas = load[1]
-        self.valores = load[2]
-        self.valores_rule = load[3]
-
+        
 
 def main():
     """Punto de entrada de ejecución

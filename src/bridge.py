@@ -31,7 +31,7 @@ class Bridge:
         self.answer_queue = Queue()
 
         self.sem = threading.Semaphore(0)
-        self.loop = asyncio.new_event_loop()
+        #self.loop = asyncio.new_event_loop()
 
         hilo = threading.Thread(target=self.run_bot).start()
         hilo1 = threading.Thread(target=self.responder).start()
@@ -108,13 +108,11 @@ class Bridge:
         while(True):
             self.sem.acquire()
             temp = self.answer_queue.get(block=True)
-            print(temp + "<- Este es el puto mensaje")
-            task = self.loop.create_task(self.enviar(temp))
-            self.loop.run_until_complete(task)
-            
+            task = asyncio.run_coroutine_threadsafe(self.enviar(temp), self.discord_client.loop)
+            task.result()
+
 
     async def enviar(self, message):
-        print("Vamos a enviar")
         channel = self.discord_client.get_channel(channel_id)
         await channel.send(message)
 

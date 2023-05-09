@@ -16,6 +16,16 @@ FALTA:
     Hacer que las reglas se queden guardadas en json
     Control de excepciones
 
+    Adaptar arguments dummy-clock (no entiendo que hacen increment/rate)
 
-mosquitto_sub -v -t 'test/topic'
-mosquitto_pub -t 'test/topic' -m 'helloWorld'
+    Tests
+    Simulacion.sh
+    
+    Memoria -> Rellenarla
+
+
+
+mosquitto_sub -v -t 'redes2/2321/02/bridge_receive'
+mosquitto_pub -t 'redes2/2321/02/bridge_receive' -m 'bridge:newsensor:1'
+mosquitto_pub -t 'redes2/2321/02/bridge_send' -m 'bridge:get:1'
+mosquitto_pub -t 'redes2/2321/02/bridge_send' -m 'bridge:newsensor:1'
