@@ -1,4 +1,5 @@
 import datetime
+import sys
 import paho.mqtt.client as mqtt
 from time import sleep
 import argparse as ag
@@ -16,9 +17,14 @@ class reloj:
         self.client = mqtt.Client()
         self.hora = datetime.datetime.now().strftime("%H:%M:%S")
         self.id = id
-        self.client.connect(broker_address, broker_port)
-        self.new_topic = topic+str(self.id)
-        self.client.subscribe(self.new_topic)
+    def connect(self):
+        try:
+            self.client.connect(broker_address, broker_port)
+            self.new_topic = topic+str(self.id)
+            self.client.subscribe(self.new_topic)
+            return 1
+        except:
+            return -1
    
     def publish(self):
         self.hora = datetime.datetime.now().strftime("%H:%M:%S")
@@ -43,6 +49,9 @@ if __name__ == "__main__":
     if (args.increment):
         rate = args.rate
     sens = reloj(args.required_arg)
+    if sens.connect() != 1:
+        print("Error al conectarse al broker")
+        sys.exit(0)
     while True:
         sens.publish()
         sleep(10)

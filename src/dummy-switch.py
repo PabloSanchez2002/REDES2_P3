@@ -15,9 +15,15 @@ class interruptor:
         self.state = "OFF"
         self.id = id
         self.client = mqtt.Client()
-        self.client.connect(broker_address, broker_port)
-        self.new_topic = topic+str(self.id)
-        self.client.subscribe(self.new_topic+"write")
+
+    def connect(self):
+        try:
+            self.client.connect(broker_address, broker_port)
+            self.new_topic = topic+str(self.id)
+            self.client.subscribe(self.new_topic+"write")
+            return 1
+        except:
+            return -1
 
     def on_response(self, user, userdate, message):
         msg = message.payload.decode()
@@ -31,7 +37,7 @@ class interruptor:
         while True:
             self.client.publish(self.new_topic+"read", "" +
                                 str(self.id)+":estado:"+self.state)
-            sleep(5)
+            sleep(1)
 
 
 if __name__ == "__main__":
@@ -53,6 +59,9 @@ if __name__ == "__main__":
     print(broker_port)
     print(probability)
     interr = interruptor(args.required_arg)
+    if interr.connect() != 1:
+        print("Error al conectarse al broker")
+        sys.exit(0)
     interr.client.on_message = interr.on_response
     hilo1 = threading.Thread(target=interr.publish)
     hilo1.start()

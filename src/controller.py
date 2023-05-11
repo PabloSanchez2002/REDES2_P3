@@ -13,7 +13,6 @@ topic = "redes2/2321/02/"
 class Controlador:
     
     def __init__(self) -> None:
-    
         self.client = mqtt.Client()
         self.client.connect(broker_address, broker_port)
         self.client.subscribe(topic+"ruleread")
@@ -25,33 +24,52 @@ class Controlador:
         self.array_reglas = []   #reglas
         self.valores = {}        #id:(magnitud:valor)
         self.valores_rule = {}   #magnitud:valor
-
+        try:
+            self.load_data()
+            for topical in self.dict_topics.keys():
+                print("hola")
+                self.client.subscribe(self.dict_topics[topical].replace("write", "read"))
+                print(self.dict_topics)
+        except:
+            pass
         hilo = threading.Thread(target=self.rule_engine)
         hilo.start()
-        self.client.loop_forever()
+        try:
+            self.client.loop_forever()
+        except KeyboardInterrupt:
+            self.save_data()
 
 
     def on_rule_message(self, client, userdata, message):
         # "<id>:<parametro>:<datos>"
         tokens = message.payload.decode().split(":")
+        print(tokens)
         #try:
         if (tokens[0] == "bridge"):
             if (tokens[1] == "newsensor"):
-                self.create_sensor(int(tokens[2]))
+                self.create_sensor(tokens[2])
             elif (tokens[1] == "newactuador"):
-                self.create_actuador(int(tokens[2]))
+                print("AAAAAAAAaa")
+                self.create_actuador(tokens[2])
             elif (tokens[1] == "newrule"):
                 self.create_regla(
-                    tokens[2], tokens[2], int(tokens[2]), int(tokens[2]), tokens[2])
+                    tokens[2], tokens[3], tokens[4], tokens[5], tokens[6])
             elif (tokens[1] == "get"):
-                print("bridge solicita dato:" + self.valores[int(tokens[2])])
-                self.client.publish(self.send_topic, self.valores[int(tokens[2])])
+                try:
+                    print("bridge solicita dato:" + self.valores[tokens[2]])
+                    self.client.publish(self.send_topic, self.valores[tokens[2]])
+                except:
+                    pass
 
         elif (tokens[1] == "rule"):
-            client.publish(self.dict_topics[int(tokens[0])], tokens[2]) 
+            try:
+                print(self.dict_topics[tokens[0]])
+                client.publish(self.dict_topics[tokens[0]], tokens[2]) 
+            except:
+                pass
         
         else:
-            self.valores[int(tokens[0])] = tokens[1]+":"+tokens[2]
+            self.valores[tokens[0]] = tokens[1]+":"+tokens[2]
             # Actualiza en el caso de que llegue un dato nuevo
             self.valores_rule[tokens[1]] = tokens[2]
             print(self.valores)
@@ -80,7 +98,7 @@ class Controlador:
     def rule_engine(self):
         while True:
             self.client.publish(topic+"rulewrite", json.dumps((self.valores_rule, self.array_reglas))) 
-            sleep(5)
+            sleep(1)
 
     def save_data(self):
         save = [self.dict_topics, self.array_reglas]
@@ -90,17 +108,10 @@ class Controlador:
     def load_data(self):
         load = []
         with open('data.json', 'r') as f:
-            json.dump(load, f)
-
-        self.dict_topics = load[0]
+            load = json.load(f)
+        self.dict_topics = dict(load[0])
         self.array_reglas = load[1]
         
-
-def main():
-    """Punto de entrada de ejecución
-    """
-    control = Controlador()
-
 
 if __name__ == '__main__':
     try:
@@ -112,7 +123,7 @@ if __name__ == '__main__':
             broker_port = args.port
         if (args.host):
             broker_address = args.host
-        main()
+        control = Controlador()
     except KeyboardInterrupt:
         print('Interrupted')
         try:

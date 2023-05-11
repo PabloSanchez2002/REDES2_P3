@@ -78,7 +78,7 @@ class Bridge:
 
                     elif tokens[1] == "regla":
                         self.client.publish(
-                            self.send_topic, "bridge:newrule:" + str(tokens[2]) + ":" + str(tokens[3]) + ":" + str(tokens[3]) + ":" + str(tokens[3]) + ":" + str(tokens[6]))
+                            self.send_topic, "bridge:newrule:" + str(tokens[2]) + ":" + str(tokens[3]) + ":" + str(tokens[4]) + ":" + str(tokens[5]) + ":" + str(tokens[6]))
 
                 elif tokens[0] == "obtener":
                     print("entra en obtener:" + self.send_topic)

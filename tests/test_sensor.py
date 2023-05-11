@@ -1,21 +1,16 @@
 
-
 """
-    Ejecutar en el orden puesto aqui:
-    python3 src/controller.py
-    python3 tests/test_controller.py 1
-    python3 src/dummy-switch.py 2
+Ejecutar un sensor, 
+python3 src/dummy-sensor.py 1
+Ejecutar este programa:
+python3 tests/test-sensor.py 1
 
-    En controller.py veremos el estado del switch
-    En dummy-switch veremos como cada 10s cambia el estado
+En test-sensor.py debería de ir apareciendo los valores de la temperatura que varían en el intervalo expuesto
 """
 
 import sys
 import paho.mqtt.client as mqtt
 import argparse as ag
-from time import sleep
-import threading
-
 topic = "redes2/2321/02/"
 broker_address = "localhost"
 broker_port = 1883
@@ -36,23 +31,12 @@ class tester:
     def connect(self):
         try:
             self.client.connect(broker_address, broker_port)
-            self.topic_sensor = topic+str(self.id)
-            self.topic_rule = topic+"ruleread"
-            self.send_topic = topic + "bridge_send"
+            self.new_topic = topic+str(self.id)
+            self.client.subscribe(self.new_topic)
             self.client.on_message = self.on_rule_message
             return 1
         except:
             return -1
-    def publish(self):
-        self.client.publish(self.send_topic, "bridge:newactuador:2")
-        self.client.publish(self.send_topic, "bridge:newsensor:1")
-        self.client.publish(self.topic_sensor, "1:temperatura:20")
-        while True: 
-            sleep(10)
-            self.client.publish(self.topic_rule, "2:rule:on")
-            sleep(10)
-            self.client.publish(self.topic_rule, "2:rule:off")
-            sleep(10)
 
 if __name__ == "__main__":
 
@@ -65,6 +49,6 @@ if __name__ == "__main__":
     if test.connect() != 1:
         print("Error al conectarse al broker")
         sys.exit(0)
-
-    test.publish()
+    
+    test.client.loop_forever()
     

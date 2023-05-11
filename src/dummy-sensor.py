@@ -1,4 +1,5 @@
 import random
+import sys
 import paho.mqtt.client as mqtt
 from time import sleep
 import argparse as ag
@@ -16,11 +17,16 @@ class sensor:
     def __init__(self, id) -> None:
         self.client = mqtt.Client()
         self.id = id
-        self.client.connect(broker_address, broker_port)
-        self.new_topic = topic+str(self.id)
-        self.client.subscribe(self.new_topic)
-        self.temperatura = min
-        
+       
+    def connect(self):
+        try:
+            self.client.connect(broker_address, broker_port)
+            self.new_topic = topic+str(self.id)
+            print(self.new_topic)
+            self.temperatura = min
+            return 1
+        except:
+            return -1
     def publish(self):
         self.temperatura = self.temperatura + increment
         if (self.temperatura > max):
@@ -51,6 +57,9 @@ if __name__ == "__main__":
     if (args.increment):
         increment = args.increment
     sens = sensor(args.required_arg)
+    if sens.connect() != 1:
+        print("Error al conectarse al broker")
+        sys.exit(0)
     while True:
         sens.publish()
         sleep(interval)

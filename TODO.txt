@@ -1,0 +1,5 @@
+Cosas que faltan:
+    Terminar la memoria
+    Crear un nuevo repositorio de github
+    Comprobar funcionalidad de todo
+    Quitar prints inutiles
