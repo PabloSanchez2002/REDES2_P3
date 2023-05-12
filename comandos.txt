@@ -6,25 +6,12 @@ añadir actuador <id>
 
 Añadir regla:
 añadir regla <parametro> <operador> <valor> <id_actuador> <accion>
-
 anadir regla temperatura > 26 3 OFF
 
 Obtener sensor/actuador:
 obtener <id_sensor/actuador>
 
-FALTA:
-    Hacer que las reglas se queden guardadas en json
-    Control de excepciones
-
-    Adaptar arguments dummy-clock (no entiendo que hacen increment/rate)
-
-    Tests
-    Simulacion.sh
-    
-    Memoria -> Rellenarla
-
-
-
+Se pueden usar los siguientes comandos con el cliente de mqtt para depurar:
 mosquitto_sub -v -t 'redes2/2321/02/bridge_receive'
 mosquitto_pub -t 'redes2/2321/02/bridge_receive' -m 'bridge:newsensor:1'
 mosquitto_pub -t 'redes2/2321/02/bridge_send' -m 'bridge:get:1'

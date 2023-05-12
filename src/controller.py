@@ -27,7 +27,6 @@ class Controlador:
         try:
             self.load_data()
             for topical in self.dict_topics.keys():
-                print("hola")
                 self.client.subscribe(self.dict_topics[topical].replace("write", "read"))
                 print(self.dict_topics)
         except:

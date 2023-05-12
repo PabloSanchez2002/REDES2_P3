@@ -67,7 +67,6 @@ class Bridge:
                 message.content = message.content.lower()
                 tokens = message.content.split(" ")
                 if tokens[0] == "añadir":
-                    print("entra en añadir")
                     if tokens[1] == "sensor":
                         self.client.publish(
                             self.send_topic, "bridge:newsensor:" + tokens[2])
@@ -81,7 +80,6 @@ class Bridge:
                             self.send_topic, "bridge:newrule:" + str(tokens[2]) + ":" + str(tokens[3]) + ":" + str(tokens[4]) + ":" + str(tokens[5]) + ":" + str(tokens[6]))
 
                 elif tokens[0] == "obtener":
-                    print("entra en obtener:" + self.send_topic)
                     self.client.publish(
                         self.send_topic, "bridge:get:" + str(tokens[1]))
 
@@ -98,7 +96,6 @@ class Bridge:
             return
 
     def on_rule_message(self, client, userdata, msg):
-        print("me llega algo! ->" + str(msg.payload.decode()))
         if msg.topic == self.receive_topic:
             self.answer_queue.put(msg.payload.decode())
             self.sem.release()
